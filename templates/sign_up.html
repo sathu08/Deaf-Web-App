@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> Login Page </title>
+<style>
+Body {
+  font-family: Calibri, Helvetica, sans-serif;
+  background-color: #ffffff;
+}
+.header .logo {
+  font-size: 25px;
+  font-family: "Sriracha", cursive;
+  color: #000;
+  text-decoration: none;
+  margin-left: 30px;
+}
+.nav-items a {
+  text-decoration: none;
+  color: #000;
+  padding: 10px 10px;
+}
+button {
+       background-color: #4CAF50;
+       width: 100%;
+        color: orange;
+        padding: 15px;
+        margin: 10px 0;
+        border: none;
+        cursor: pointer;
+         }
+ form {
+        border: 3px solid #f1f1f1;
+    }
+ input[type=text], input[type=password]{
+        width: 100%;
+        margin: 8px 0;
+        padding: 12px 20px;
+        display: inline-block;
+        border: 2px solid green;
+        box-sizing: border-box;
+    }
+ input[type=date] {
+        width: 25%;
+        margin: 5px 0;
+        padding: 12px 20px;
+        display: inline-block;
+        border: 2px solid green;
+        box-sizing: border-box;
+    }
+ button:hover {
+        opacity: 0.7;
+    }
+  .container {
+        padding: 25px;
+        background-color: lightblue;
+    }
+</style>
+</head>
+<body>
+<header class="header">
+    <a href="#" class="logo">ERIS</a>
+  </header>
+    <div style="text-align: center;"> <h1> Login Form </h1> </div>
+    <form method="post" action="/Sign_Up">
+        <div class="msg">{{ msg }}</div>
+        <div class="container">
+            <label>First Name :
+            <input type="text" placeholder="Enter First Name" name="First_Name" required></label>
+            <label>Last Name:
+            <input type="text" placeholder="Enter Last Name" name="Last_Name" required></label>
+            <label>User Name:
+            <input type="text" placeholder="Enter Last Name" name="User_Name" required></label>
+            <label>Email ID :
+            <input type="text" placeholder="Enter Email IDUser Name" name="Email_ID" required></label>
+            <label>Password :
+            <input type="password" placeholder="Enter Password" name="password" required> </label>
+            <label>Re Password :
+            <input type="password" placeholder="Enter Password" name="re_password" required> </label>
+            <label>Date Of Birth:
+            <input type="date" placeholder="Enter Date of Birth" name="DOB" required></label>
+            <button type="submit">Sign Up</button>
+        </div>
+    </form>
+</body>
+</html>
+
+

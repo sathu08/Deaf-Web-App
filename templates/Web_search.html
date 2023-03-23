@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <style>
+        .open-button {
+
+            background-color: #3b66e7;
+            color: white;
+            border: none;
+            cursor: pointer;
+            position: fixed;
+            bottom: 215px;
+            left: 720px;
+            width: 80px;
+            height: 30px;
+    }
+        #navlist a{
+            float:right;
+            display: block;
+            color: ghostwhite;
+            text-align: center;
+            padding: 12px;
+            text-decoration: none;
+            font-size: 50px;
+        }
+        a.weather {
+            position: absolute;
+            top: 50px;
+            right: 05px;
+            display: block;
+            color: ghostwhite;
+            text-align: center;
+            padding: 12px;
+            text-decoration: none;
+            font-size: 20px;
+        }
+        a.location {
+            position: absolute;
+            top: 130px;
+            right: 05px;
+            display: block;
+            color: ghostwhite;
+            text-align: center;
+            padding: 12px;
+            text-decoration: none;
+            font-size: 25px;
+        }
+        .form{
+              position: relative;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              transition: all 1s;
+              width: 50px;
+              height: 50px;
+              background: white;
+              box-sizing: border-box;
+              border-radius: 25px;
+              border: 4px solid white;
+              padding: 5px;
+            }
+        body {
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+            width: 100%;
+            background: url("https://source.unsplash.com/random/")no-repeat;
+            background-size: cover;
+            background-position: center;
+            }
+        input.form-city{
+            position: absolute;
+            top: 200px;
+            right: 10px;
+            width: 09.2%;
+            height: 25px;
+            line-height: 30px;
+            outline: 0;
+            border: 0;
+            font-size: 1em;
+            border-radius: 20px;
+            padding: 0 20px;
+
+        }
+        input.form-input {
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 42.5px;
+              line-height: 30px;
+              outline: 0;
+              border: 0;
+              display: none;
+              font-size: 1em;
+              border-radius: 20px;
+              padding: 0 20px;
+            }
+        .fa {
+              box-sizing: border-box;
+              padding: 10px;
+              width: 42.5px;
+              height: 42.5px;
+              position: absolute;
+              top: 0;
+              right: 0;
+              border-radius: 50%;
+              color: #07051a;
+              text-align: center;
+              font-size: 1.2em;
+              transition: all 1s;
+            }
+        .form:hover {
+              width: 300px;
+              cursor: pointer;
+            }
+        .form:hover input.form-input {
+              display: block;
+            }
+        .form:hover .fa {
+              background: #07051a;
+              color: white;
+            }
+    </style>
+    <title>ERIS WEB SEARCH</title>
+</head>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<body>
+<section>
+    <h1>ERIS WEB SEARCH</h1>
+    <a class="weather" >{{weather}}</a>
+    <div id="navlist">
+        <a >{{dateandtime}}</a>
+    </div>
+    <a class="location" >{{location}}</a>
+
+</section>
+<form action="" method="post" >
+    <div>
+    <label>
+        <input  class="form-city" type="text" name="messages" placeholder="city  here">
+    </label>
+
+    </div>
+</form>
+<a href="/ERIS_VS"><button class="open-button">ERIS VS</button></a>
+<form  action="/Web_search_index" method="post" class='form'>
+    <label>
+        <input class="form-input"  type="search" name="messages" placeholder="Search here ...">
+    </label>
+        <i class="fa fa-search"></i>
+</form>
+</body>
+</html>

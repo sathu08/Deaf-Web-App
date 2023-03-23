@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="eng">
+<style>
+    .form-container {
+        max-width: 300px;
+        padding: 10px;
+        background-color: white;
+    }
+    .form-container .btn {
+        background-color: #04AA6D;
+        color: white;
+        padding: 6px 10px;
+        border: none;
+        cursor: pointer;
+        width: 30%;
+        margin-bottom: 10px;
+        opacity: 0.8;
+    }
+    .form-container .cancel {
+        background-color: red;
+    }
+    .form-container .btn:hover, .open-button:hover {
+        opacity: 1;
+    }
+    .open-button {
+        background-color: #3b66e7;
+        color: white;
+        border: none;
+        cursor: pointer;
+        position: fixed;
+        top: 20px;
+        left: 450px;
+        width: 80px;
+        height: 30px;
+    }
+    .left{display:inline-block; left:10%}
+    .left_video{
+        border-collapse: collapse;
+        margin: 10px 10px;
+    }
+    .form-popup {
+        display: none;
+        top: 0;
+        right: 500px;
+        position: fixed;
+        border: 1px solid #f1f1f1;
+    }
+    body{
+        margin: 0;
+        padding: 0;
+        background: white;
+        height: 100vh;
+        width: 100vw;
+        font-family: "Raleway", sans-serif;
+    }
+    .search_title{
+        font-size: 120%!important;
+        margin: 10px 10px;
+    }
+    .search input[type=text]{
+        position: relative;
+        width:300px;
+        height:25px;
+        box-sizing: border-box;
+        border-radius:25px;
+        border: 2px solid black;
+        padding: 5px;
+  }
+  .search{
+      margin:7px;
+  }
+  .search button{
+      background-color: white;
+      color: #000000;
+      padding: 15px 10px;
+      margin-right: 16px;
+      font-size: 20px;
+      border: 20px;
+      cursor: pointer;
+  }
+  .styled-table {
+      border-collapse: collapse;
+      margin: 30px 30px;
+      font-size: 0.9em;
+      font-family: sans-serif;
+      min-width: 1420px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  }
+  .styled-table thead tr {
+      background-color: #009879;
+      color: #ffffff;
+      text-align: left;
+  }
+  .styled-table th,
+  .styled-table td {
+      padding: 40px 20px;
+  }
+  styled-table tbody tr {
+      border-bottom: 1px solid #dddddd;
+  }
+</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<head>
+        <title>ERIS VIDEO WEB SEARCH</title>
+</head>
+<div style="border-bottom:1px solid #000;">
+    <div class="left">
+      <h1 class="search_title">ERIS WS</h1>
+    </div>
+    <div class="left">
+          <form action="/ERIS_VS"  method="post">
+              <div class="search">
+              <label><input type="text" placeholder=" Search Courses" name="messages" value="{{ Name_search }}"></label>
+              <button><i class="fa fa-search" style="font-size: 18px;"></i></button>
+              </div>
+          </form>
+        </div>
+    <button class="open-button" onclick="openForm()">ERIS VS</button>
+        <div class="form-popup" id="myForm">
+            <form action="/" class="form-container">
+            <div><img class="left_video"  src="{{ url_for('ERIS_VS_video_feed') }}" height="50%" width="50%" alt=""></div>
+            <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+            </form>
+    </div>
+</div>
+<body>
+<table class="styled-table">
+    {% for result in result_all %}
+        <tr>
+            <td><a href="{{ result[1]}}"><div>{{ result[0]}}</div></a></td></tr>
+            <td>{{ result[2] }}</td>
+    {% endfor %}
+</table>
+<script>
+function openForm() {
+  document.getElementById("myForm").style.display = "block";
+}
+function closeForm() {
+  document.getElementById("myForm").style.display = "none";
+}
+</script>
+</body>
+</html>
+

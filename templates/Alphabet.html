@@ -1,0 +1,113 @@
+<html lang="eng">
+<style>
+  .left{float:left;}
+  .right{float:right;}
+  .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+}
+.header .logo {
+  font-size: 25px;
+  font-family: "Sriracha", cursive;
+  color: #000;
+  text-decoration: none;
+  margin-left: 30px;
+}
+.nav-items {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background-color: #ffffff;
+  margin-right: 10px;
+}
+.nav-items a {
+  text-decoration: none;
+  color: #000;
+  padding: 10px 10px;
+}
+.left_Form{width: 50%;margin-left : 29%}
+.game_form{
+  margin:7px;
+}
+.game_form input[type=button ] {
+  background-color: #5edaf0;
+  color: #000;
+  padding: 5px 14px;
+  border: none;
+  border-radius: 5px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.4)
+}
+.game_form input[type=text]{
+ position: relative;
+ width:300px;
+ height:25px;
+ box-sizing: border-box;
+ border: 2px solid black;
+ padding: 5px
+}
+.game_form input[type=submit ] {
+  background-color: #5edaf0;
+  color: #000;
+  padding: 5px 14px;
+  border: none;
+  border-radius: 5px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.4)
+}
+</style>
+  <head>
+    <title>ERIS EDU GAME</title>
+  </head>
+<body>
+  <header class="header">
+    <a href="/home" class="logo">ERIS</a>
+  </header>
+  <nav class="nav-items">
+      <a href="#"></a>
+    </nav>
+<div class="left_Form">
+
+<form method="post" action="/alphabet" >
+    <div class="game_form">
+    <input type="button" id="decrement-btn" value="Previous Value" />
+    <label for="todo"></label>
+    <label for="letter-input"></label><input type="text" name="todo" id="letter-input" value="{{ Message }}" readonly>
+    <input type="button" id="increment-btn" value="Next Value" />
+    <input type="submit" value="Play" />
+    </div>
+
+</form>
+</div>
+<div><img class="left"  src="{{ url_for('alphabet_video_feed') }}" height="50%" width="30%" alt=""></div>
+<div><img class="right" src="{{ url_for('alphabet_image_feed') }}" height="50%" width="30%" alt=""></div>
+<script>
+
+const letterInput = document.getElementById("letter-input");
+const incrementBtn = document.getElementById("increment-btn");
+const decrementBtn = document.getElementById("decrement-btn");
+
+incrementBtn.addEventListener("click", function() {
+  let currentLetter = letterInput.value.toUpperCase();
+  let nextLetter = String.fromCharCode(currentLetter.charCodeAt(0) + 1);
+  if (nextLetter > "Z") {
+    nextLetter = "A";
+  }
+  letterInput.value = nextLetter;
+});
+decrementBtn.addEventListener("click", function() {
+  let currentLetter = letterInput.value.toUpperCase();
+  let prevLetter = String.fromCharCode(currentLetter.charCodeAt(0) - 1);
+  if (prevLetter < "A") {
+    prevLetter = "A";
+  }
+  letterInput.value = prevLetter;
+});
+</script>
+</body>
