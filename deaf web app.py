@@ -10,20 +10,18 @@ from bs4 import BeautifulSoup
 import requests
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
-from flask_mysqldb import MySQL
+# from flask_mysqldb import MySQL
 import smtplib
+import secrets
+import sqlite3
+
 detector = HandDetector(maxHands=1)
 classifier = Classifier("Model/keras_model.h5", "Model/labels.txt")
 offset = 20
 imgSize = 300
 labels = ["A", "B", "C", "D", "F", "H", "L", "U", "V", "W", "X", "Y"]
 app = Flask(__name__)
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-app.config["MYSQL_HOST"] = 'localhost'
-app.config["MYSQL_USER"] = 'root'
-app.config["MYSQL_PASSWORD"] = '@@Sathyamass08'
-app.config["MYSQL_DB"] = 'eris'
-mysql = MySQL(app)
+app.secret_key = secrets.token_hex(16)
 smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
 smtpObj.ehlo()
 smtpObj.starttls()
@@ -48,14 +46,17 @@ msg_alp = 'img'
 msg_num = '0'
 msg_alp_miss = 'img'
 msg_words = 'img'
+
+
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST' and 'Email_ID' in request.form and 'password' in request.form:
         email = request.form['Email_ID']
         password = request.form['password']
-        cur = mysql.connection.cursor()
-        cur.execute('select * from Account WHERE Emailid = % s AND Password = % s', (email, password))
+        conn = sqlite3.connect('eris.db')
+        cur = conn.cursor()
+        cur.execute('select * from Account WHERE Emailid = ? AND Password = ?', (email, password))
         account = cur.fetchone()
         cur.connection.commit()
         cur.close()
@@ -68,12 +69,15 @@ def login():
             Notif = 'Incorrect username / password !'
             return render_template('login.html', msg=Notif)
     return render_template('login.html')
+
+
 @app.route('/Forget_Email', methods=['GET', 'POST'])
 def Forget_Email():
     if request.method == 'POST':
         user = request.form
         email = user['forgot_email']
-        cur = mysql.connection.cursor()
+        conn = sqlite3.connect('eris.db')
+        cur = conn.cursor()
         cur.execute('select Emailid from Account')
         cur.fetchall()
         for i in cur:
@@ -93,6 +97,8 @@ def Forget_Email():
                 Notif = 'Incorrect Email'
                 return render_template('Forget_Email.html', msg=Notif)
     return render_template('Forget_Email.html')
+
+
 @app.route('/Sign_Up', methods=['GET', 'POST'])
 def Sign_Up():
     if request.method == "POST":
@@ -105,12 +111,12 @@ def Sign_Up():
         re_password = signup_details['re_password']
         DOB = signup_details['DOB']
         if password == re_password:
-            cur = mysql.connection.cursor()
+            conn = sqlite3.connect('eris.db')
+            cur = conn.cursor()
             Values = Email_ID, First_Name, Last_Name, User_Name, password, DOB, re_password
             cur.execute(
                 "INSERT into Account(Emailid,First_Name,Last_Name,user_name,Password,Date_of_birth,confirm_Password)"
-                "values(%s, %s, %s, %s,%s, %s, %s)",
-                Values)
+                "values(?, ?, ?, ?, ?, ?, ?)", Values)
             cur.connection.commit()
             cur.close()
             body = ("Subject: New Register User.\n\n"
@@ -149,6 +155,8 @@ def Sign_Up():
             msg = "Password not Match "
             return render_template('sign_up.html', msg=msg)
     return render_template('sign_up.html')
+
+
 @app.route('/Reset_Password', methods=['GET', 'POST'])
 def Reset_Password():
     email = Forget_Email.var
@@ -156,7 +164,8 @@ def Reset_Password():
         password = request.form['password']
         verify_password = request.form['re_enter_password']
         if password == verify_password:
-            cur = mysql.connection.cursor()
+            conn = sqlite3.connect('eris.db')
+            cur = conn.cursor()
             cur.execute('update Account set Password = %s where Emailid=%s', (password, email))
             cur.connection.commit()
             cur.close()
@@ -165,18 +174,28 @@ def Reset_Password():
             Notif = "Password don't match"
             return render_template('Reset_Password.html', msg=Notif)
     return render_template('Reset_Password.html')
+
+
 @app.route('/home', methods=['GET', 'POST'])
 def home():
     return render_template('Home.html')
+
+
 @app.route('/eris_deaf', methods=['GET', 'POST'])
 def eris_deaf():
     return render_template('Eris_Deaf.html')
+
+
 @app.route('/Alphabet_Games', methods=['GET', 'POST'])
 def Alphabet_Games():
     return render_template('Alphabet_Games.html')
+
+
 @app.route('/Number_Games', methods=['GET', 'POST'])
 def Number_Games():
     return render_template('Number_Games.html')
+
+
 @app.route('/alphabet', methods=['GET', 'POST'])
 def alphabet():
     if request.method == 'POST':
@@ -185,6 +204,7 @@ def alphabet():
         msg_alp = todo
         return render_template('Alphabet.html', Message=msg_alp)
     return render_template('Alphabet.html')
+
 def alphabet_gen(video):
     while True:
         success, img = video.read()
@@ -219,19 +239,27 @@ def alphabet_gen(video):
         ret, jpeg = cv2.imencode('.jpg', imgOutput)
         frame = jpeg.tobytes()
         yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n'
+
+
 def alphabet_img():
     global msg_alp
     data = msg_alp
     img = cv2.imread("./static/Alphabet/%s.png" % data)
     frame = cv2.imencode('.jpg', img)[1].tobytes()
     yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
+
+
 @app.route('/alphabet_video_feed')
 def alphabet_video_feed():
     global video
     return Response(alphabet_gen(video), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/alphabet_image_feed')
 def alphabet_image_feed():
     return Response(alphabet_img(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/number', methods=['GET', 'POST'])
 def number():
     global msg_num
@@ -249,7 +277,7 @@ def number_gen(video):
         hand = detector.findHands(img, draw=False)
         if hand:
             lmlist = hand[0]
-            if lmlist:
+            if any(lmlist):
                 fingerup = detector.fingersUp(lmlist)
                 if fingerup == [0, 0, 0, 0, 0]:
                     FingerCount = 0
@@ -279,19 +307,27 @@ def number_gen(video):
         ret, jpeg = cv2.imencode('.jpg', img)
         frame = jpeg.tobytes()
         yield b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n'
+
+
 def number_img():
     global msg_num
     data = msg_num
     img = cv2.imread("./static/Number/%s.png" % data)
     frame = cv2.imencode('.jpg', img)[1].tobytes()
     yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
+
+
 @app.route('/number_video_feed')
 def number_video_feed():
     global video
     return Response(number_gen(video), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/number_image_feed')
 def number_image_feed():
     return Response(number_img(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/Words', methods=['GET', 'POST'])
 def Words():
     global msg_words
@@ -301,6 +337,8 @@ def Words():
         msg_words = todo
         return render_template('Words.html', Message=msg_words)
     return render_template('Words.html', Message=msg_words)
+
+
 def Words_gen(video):
     FingerCount = ''
     while True:
@@ -332,19 +370,27 @@ def Words_gen(video):
         frame = jpeg.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+
+
 def Words_img():
     global msg_words
     data = msg_words
     img = cv2.imread("./static/Words/%s.png" % data)
     frame = cv2.imencode('.jpg', img)[1].tobytes()
     yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
+
+
 @app.route('/Words_video_feed')
 def Words_video_feed():
     global video
     return Response(Words_gen(video), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/Words_image_feed')
 def Words_image_feed():
     return Response(Words_img(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/Alphabet_Game', methods=['GET', 'POST'])
 def Alphabet_Game():
     global msg_alp_game, alp_count, alp_score
@@ -359,6 +405,8 @@ def Alphabet_Game():
             return render_template('Alphabet_Game.html', Message=msg_alp_game, SCORE=alp_score, NOTI_SCORE=notif)
         return render_template('Alphabet_Game.html', Message=msg_alp_game, SCORE=alp_score)
     return render_template('Alphabet_Game.html', SCORE=alp_score)
+
+
 def Alphabet_Game_gen(video):
     while True:
         success, img = video.read()
@@ -395,19 +443,27 @@ def Alphabet_Game_gen(video):
         frame = jpeg.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+
+
 def Alphabet_Game_img():
     global msg_alp_game
     data = msg_alp_game
     img = cv2.imread("./static/Alphabet_Game/%s.png" % data)
     frame = cv2.imencode('.jpg', img)[1].tobytes()
     yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
+
+
 @app.route('/Alphabet_Game_video_feed')
 def Alphabet_Game_video_feed():
     global video
     return Response(Alphabet_Game_gen(video), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/Alphabet_Game_image_feed')
 def Alphabet_Game_image_feed():
     return Response(Alphabet_Game_img(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/Number_Game', methods=['GET', 'POST'])
 def Number_Game():
     global msg_num_game, num_score
@@ -422,6 +478,8 @@ def Number_Game():
             return render_template('Number_Game.html', Message=msg_num_game, SCORE=num_score, NOTI_SCORE=notif)
         return render_template('Number_Game.html', Message=msg_num_game, SCORE=num_score)
     return render_template('Number_Game.html', Message=msg_num_game, SCORE=num_score)
+
+
 def Number_Game_gen(video):
     FingerCount = ''
     while True:
@@ -461,19 +519,27 @@ def Number_Game_gen(video):
         ret, jpeg = cv2.imencode('.jpg', img)
         frame = jpeg.tobytes()
         yield b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n'
+
+
 def Number_Game_img():
     global msg_num_game
     data = msg_num_game
     img = cv2.imread("./static/Number_Game/%s.png" % data)
     frame = cv2.imencode('.jpg', img)[1].tobytes()
     yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
+
+
 @app.route('/Number_Game_video_feed')
 def Number_Game_video_feed():
     global video
     return Response(Number_Game_gen(video), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/Number_Game_image_feed')
 def Number_Game_image_feed():
     return Response(Number_Game_img(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/Number_Add_Game', methods=['GET', 'POST'])
 def Number_Add_Game():
     global msg_num_add_game, num_add_score
@@ -488,6 +554,8 @@ def Number_Add_Game():
             return render_template('Number_Add_Game.html', Message=msg_num_add_game, SCORE=num_add_score, NOTI_SCORE=notif)
         return render_template('Number_Add_Game.html', Message=msg_num_add_game, SCORE=num_add_score)
     return render_template('Number_Add_Game.html', Message=msg_num_add_game, SCORE=num_add_score)
+
+
 def Number_Add_Game_gen(video):
     FingerCount = ''
     while True:
@@ -527,19 +595,27 @@ def Number_Add_Game_gen(video):
         ret, jpeg = cv2.imencode('.jpg', img)
         frame = jpeg.tobytes()
         yield b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n'
+
+
 def Number_Add_Game_img():
     global msg_num_add_game
     data = msg_num_add_game
     img = cv2.imread("./static/Number_Add_Game/%s.png" % data)
     frame = cv2.imencode('.jpg', img)[1].tobytes()
     yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
+
+
 @app.route('/Number_Add_Game_video_feed')
 def Number_Add_Game_video_feed():
     global video
     return Response(Number_Add_Game_gen(video), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/Number_Add_Game_image_feed')
 def Number_Add_Game_image_feed():
     return Response(Number_Add_Game_img(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/Number_Sub_Game', methods=['GET', 'POST'])
 def Number_Sub_Game():
     global msg_num_sub_game, num_sub_score
@@ -593,19 +669,27 @@ def Number_Sub_Game_gen(video):
         ret, jpeg = cv2.imencode('.jpg', img)
         frame = jpeg.tobytes()
         yield b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n'
+
+
 def Number_Sub_Game_img():
     global msg_num_sub_game
     data = msg_num_sub_game
     img = cv2.imread("./static/Number_Sub_Game/%s.png" % data)
     frame = cv2.imencode('.jpg', img)[1].tobytes()
     yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
+
+
 @app.route('/Number_Sub_Game_video_feed')
 def Number_Sub_Game_video_feed():
     global video
     return Response(Number_Sub_Game_gen(video), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/Number_Sub_Game_image_feed')
 def Number_Sub_Game_image_feed():
     return Response(Number_Sub_Game_img(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/Miss_Word', methods=['GET', 'POST'])
 def Miss_Word():
     global msg_alp_miss, alp_miss_count, alp_miss_score
@@ -620,6 +704,8 @@ def Miss_Word():
             return render_template('Miss_Word.html', Message=msg_alp_miss, SCORE=alp_miss_score, NOTI_SCORE=notif)
         return render_template('Miss_Word.html', Message=msg_alp_miss, SCORE=alp_miss_score)
     return render_template('Miss_Word.html', SCORE=alp_miss_score)
+
+
 def Miss_Word_gen(video):
     while True:
         success, img = video.read()
@@ -656,99 +742,130 @@ def Miss_Word_gen(video):
         frame = jpeg.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+
+
 def Miss_Word_img():
     global msg_alp_miss
     data = msg_alp_miss
     img = cv2.imread("./static/Miss_Word/%s.png" % data)
     frame = cv2.imencode('.jpg', img)[1].tobytes()
     yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
+
+
 @app.route('/Miss_Word_video_feed')
 def Miss_Word_video_feed():
     global video
     return Response(Miss_Word_gen(video), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 @app.route('/Miss_Word_image_feed')
 def Miss_Word_image_feed():
     return Response(Miss_Word_img(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+
 @app.route('/Web_search', methods=['GET', 'POST'])
 def Web_search():
     if request.method == 'POST':
-        # location
         geolocator = Nominatim(user_agent="geoapiExercises")
         city = request.form['messages']
         location = geolocator.geocode(city)
         result = TimezoneFinder().timezone_at(lng=location.longitude, lat=location.latitude)
         dateandtime = datetime.now(timezone(result)).strftime('%I:%M:%p')
-        # weather
+
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                          'Chrome/58.0.3029.110 Safari/537.3'}
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
         city_weather = city + " weather"
         city_weather = city_weather.replace(" ", "+")
         res = requests.get(
-            f'https://www.google.com/search?q={city_weather}&oq={city_weather}&aqs=chrome.0.35i39l2j0l4j46j69i60'
-            f'.6128j1j7&sourceid=chrome&ie=UTF-8',
+            f'https://www.google.com/search?q={city_weather}&oq={city_weather}&aqs=chrome.0.35i39l2j0l4j46j69i60.6128j1j7&sourceid=chrome&ie=UTF-8',
             headers=headers)
-        soup = BeautifulSoup(res.text, 'html.parser')
-        info = soup.select('#wob_dc')[0].getText().strip()
-        weather = soup.select('#wob_tm')[0].getText().strip()
-        location = soup.select('#wob_loc')[0].getText().strip()
-        weather = weather + '°C', info
-        location = location
-        return render_template('Web_search.html', dateandtime=dateandtime, location=location, weather=weather)
+        soup = BeautifulSoup(res.text, 'Web_search.parser')
+
+        info_elements = soup.select('#wob_dc')
+        weather_elements = soup.select('#wob_tm')
+        location_elements = soup.select('#wob_loc')
+
+        if info_elements and weather_elements and location_elements:
+            info = info_elements[0].getText().strip()
+            weather = weather_elements[0].getText().strip() + '°C', info
+            location = location_elements[0].getText().strip()
+        else:
+            info = "No information available"
+            weather = "No weather information available"
+            location = "No location information available"
+
+        return render_template('index.html', dateandtime=dateandtime, location=location, weather=weather)
     else:
         geolocator = Nominatim(user_agent="geoapiExercises")
         city = "chennai"
         location = geolocator.geocode(city)
         result = TimezoneFinder().timezone_at(lng=location.longitude, lat=location.latitude)
         dateandtime = datetime.now(timezone(result)).strftime('%I:%M:%p')
-        # weather
+
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                          'Chrome/58.0.3029.110 Safari/537.3'}
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
         city_weather = city + " weather"
         city_weather = city_weather.replace(" ", "+")
         res = requests.get(
-            f'https://www.google.com/search?q={city_weather}&oq={city_weather}&aqs=chrome.0.35i39l2j0l4j46j69i60'
-            f'.6128j1j7&sourceid=chrome&ie=UTF-8',
+            f'https://www.google.com/search?q={city_weather}&oq={city_weather}&aqs=chrome.0.35i39l2j0l4j46j69i60.6128j1j7&sourceid=chrome&ie=UTF-8',
             headers=headers)
         soup = BeautifulSoup(res.text, 'html.parser')
-        info = soup.select('#wob_dc')[0].getText().strip()
-        weather = soup.select('#wob_tm')[0].getText().strip()
-        location = soup.select('#wob_loc')[0].getText().strip()
-        weather = weather + '°C', info
-        location = location
+
+        info_elements = soup.select('#wob_dc')
+        weather_elements = soup.select('#wob_tm')
+        location_elements = soup.select('#wob_loc')
+
+        if info_elements and weather_elements and location_elements:
+            info = info_elements[0].getText().strip()
+            weather = weather_elements[0].getText().strip() + '°C', info
+            location = location_elements[0].getText().strip()
+        else:
+            info = "No information available"
+            weather = "No weather information available"
+            location = "No location information available"
+
         return render_template('Web_search.html', dateandtime=dateandtime, location=location, weather=weather)
+
+
 @app.route('/Web_search_index', methods=['GET', 'POST'])
 def Web_search_index():
     if request.method == 'POST':
         search = request.form
         messages = search['messages']
-        cur = mysql.connection.cursor()
-        result = cur.execute('select Search_Name,url from Search_item WHERE category=%s', (messages,))
-        if result > 0:
-            result_all = cur.fetchall()
+        conn = sqlite3.connect('eris.db')
+        cur = conn.cursor()
+        cur.execute('select Search_Name,url from Search_item WHERE category=?', (messages,))
+        result_all = cur.fetchall()
+        if int(result_all) > 0:
             return render_template('Web_search_page.html', result_all=result_all, Name_search=messages)
     return render_template('Web_search.html')
+
+
 @app.route('/Web_search_page', methods=['GET', 'POST'])
 def Web_search_page():
     if request.method == "POST":
         Name = request.form["messages"]
-        cur = mysql.connection.cursor()
-        result = cur.execute('select Search_Name,url from Search_item WHERE category=%s', (Name,))
-        if result > 0:
-            result_all = cur.fetchall()
+        conn = sqlite3.connect('eris.db')
+        cur = conn.cursor()
+        cur.execute('select Search_Name,url from Search_item WHERE category=%s', (Name,))
+        result_all = cur.fetchall()
+        if int(result_all) > 0:
             return render_template('Web_search_page.html', result_all=result_all, Name_search=Name)
     return render_template('Web_search_page.html')
+
+
 @app.route('/ERIS_VS', methods=['GET', 'POST'])
 def ERIS_VS():
     global msg_src
-    cur = mysql.connection.cursor()
-    result = cur.execute('select Search_Name,url,About from Search_item WHERE category=%s', (msg_src,))
-    if result > 0:
-        result_all = cur.fetchall()
+    conn = sqlite3.connect('eris.db')
+    cur = conn.cursor()
+    cur.execute('select Search_Name,url,About from Search_item WHERE category=?', (msg_src,))
+    result_all = cur.fetchall()
+    if len(result_all) > 0:
         return render_template('ERIS_VS.html', Name_search=msg_src, result_all=result_all)
     return render_template('ERIS_VS.html', Name_search=msg_src)
+
+
 def ERIS_VS_gen(video):
     lis = ["Birds", "Ocean", "Cat", "Phone", "YOU", "Plants", "Airline"]
     FingerCount = ''
@@ -781,6 +898,8 @@ def ERIS_VS_gen(video):
         ret, jpeg = cv2.imencode('.jpg', img)
         frame = jpeg.tobytes()
         yield b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n'
+
+
 @app.route('/ERIS_VS_video_feed')
 def ERIS_VS_video_feed():
     global video
